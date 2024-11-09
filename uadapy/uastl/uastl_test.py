@@ -57,7 +57,7 @@ def main_demo():
         nmbsamples=3,
         plot_cov=True,
         plot_cor=True,
-        plot_cor_length=False,
+        plot_cor_length=True,
         co_point=100,
         export=export,
         line_width=2.5,

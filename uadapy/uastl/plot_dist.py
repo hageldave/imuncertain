@@ -25,7 +25,7 @@ def plot_dist(data, plot_type, **opts):
         ceil_max_sigmalvl = np.ceil(max_sigmalvl + 1)
         lower_bound = np.min(data['mu'] - ceil_max_sigmalvl * data['sigma_sq'])
         upper_bound = np.max(data['mu'] + ceil_max_sigmalvl * data['sigma_sq'])
-        axbounds = [0, len(data['mu']), lower_bound, upper_bound]
+        axbounds = [-1, len(data['mu']), lower_bound, upper_bound]
     if 'ylim' in opts:
         all_zeros = np.all(opts['ylim'] == 0)
         if all_zeros:
@@ -33,9 +33,9 @@ def plot_dist(data, plot_type, **opts):
             ceil_max_sigmalvl = np.ceil(max_sigmalvl + 1)
             lower_bound = np.min(data['mu'] - ceil_max_sigmalvl * data['sigma_sq'])
             upper_bound = np.max(data['mu'] + ceil_max_sigmalvl * data['sigma_sq'])
-            axbounds = [0, len(data['mu']), lower_bound, upper_bound]
+            axbounds = [-1, len(data['mu']), lower_bound, upper_bound]
         else:
-            axbounds = [0, len(data['mu']), opts['ylim'][0], opts['ylim'][1]]
+            axbounds = [-1, len(data['mu']), opts['ylim'][0], opts['ylim'][1]]
 
     if plot_type == "isoband":
         x = np.arange(len(data['mu']))

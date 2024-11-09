@@ -125,10 +125,13 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
         tme_stmp = [0, ylen]
         opts['stmp_length'] = ylen
         opts['stamp_indices'] = list(range(len(y_ltstr.mu)))
-        opts['time_stamp'] = [1, ylen]
+        opts['time_stamp'] = [0, ylen]
     else:
         tme_stmp = opts['time_stamp']
-        opts['stmp_length'] = tme_stmp[1] - tme_stmp[0]
+        if tme_stmp[1] < ylen:
+            tme_stmp[1] = tme_stmp[1] + 1
+        opts['time_stamp'] = [tme_stmp[0], tme_stmp[1]]
+        opts['stmp_length'] = tme_stmp[1] - tme_stmp[0] + 1
         stamp_indices = list(range(opts['time_stamp'][0], opts['time_stamp'][1] + 1))
         stamp_indices += list(range(ylen + opts['time_stamp'][0], ylen + opts['time_stamp'][1] + 1))
         for i in range(num_periods):
@@ -259,7 +262,7 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
     maxyheight.append((R['lims'][3] - R['lims'][2]) / (part_factor + 1) / 2)
     ymid.append(R['lims'][2] + maxyheight[-1])
 
-    x = np.linspace(1, ylen, ylen)
+    x = np.linspace(0, ylen - 1, ylen)
 
     # Approx. 16:9 pbaspect of plot:
     pbx_length = (3 + num_periods + 1) / 9 * 16
@@ -272,12 +275,12 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
     plt.subplot(3 + num_periods, 1, 1)
     if helper_co_dep == 1:
         j = 0
-        for i in range(len(plot_back) - 1):
-            if i == opts['co_point'] - 1:  # Adjusting for 0-indexing in Python
-                k = (i % ylen) - tme_stmp[0] - 1
-                thickness = (tme_stmp[1] - tme_stmp[0] - 1) / 500
-                xdif = x[k + 1] - x[k]
-                xp = [x[k] - thickness * xdif, x[k] + thickness * xdif, x[k] + thickness * xdif, x[k] - thickness * xdif]
+        for i in range(1, len(plot_back)):
+            if i == opts['co_point'] and (i % ylen) > tme_stmp[0] and (i % ylen) < tme_stmp[1]:
+                k = (i % ylen) - tme_stmp[0]
+                thickness = (tme_stmp[1] - tme_stmp[0]) / 500
+                xdif = x[k] - x[k -1]
+                xp = [x[k-1] - thickness * xdif, x[k-1] + thickness * xdif, x[k-1] + thickness * xdif, x[k-1] - thickness * xdif]
                 yss = ymid[j]
                 if 'yaxis' in opts['export'] :
                     if opts['export']['yaxis'] != "":
@@ -288,33 +291,32 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
                 yp = [yss - diff, yss - diff, yss + diff + part_factor * diff * 2, yss + diff + part_factor * diff * 2]
                 plt.fill(xp, yp, color=[0, 0, 0], edgecolor='none', alpha=1)
 
-            maxc = max(abs(plot_back[(j) * ylen: (j + 1) * ylen]))
-            if maxc > 0:
-                yss = ymid[j]
-                diff = maxyheight[j]
-                if plot_back[i] > 0:
-                    neg_cont = yss
-                    pos_cont = yss + plot_back[i] / maxc * diff
+            if (i % ylen) != 0 and (i % ylen) > tme_stmp[0] and (i % ylen) < tme_stmp[1]:
+                maxc = max(abs(plot_back[(j) * ylen: (j + 1) * ylen]))
+                if maxc > 0:
+                    yss = ymid[j]
+                    diff = maxyheight[j]
+                    if plot_back[i] > 0:
+                        neg_cont = yss
+                        pos_cont = yss + plot_back[i] / maxc * diff
+                    else:
+                        neg_cont = yss + plot_back[i] / maxc * diff
+                        pos_cont = yss
+                    col_ind = int(np.ceil(plot_back[i] / maxc * (opts['discr_nmb'] // 2))) + (opts['discr_nmb'] // 2)
                 else:
-                    neg_cont = yss + plot_back[i] / maxc * diff
+                    yss = ymid[j]
+                    neg_cont = yss
                     pos_cont = yss
-                col_ind = int(np.ceil(plot_back[i] / maxc * (opts['discr_nmb'] // 2))) + (opts['discr_nmb'] // 2)
-            else:
-                yss = ymid[j]
-                neg_cont = yss
-                pos_cont = yss
-                col_ind = (opts['discr_nmb'] // 2)
-
-            if (i % ylen) != 0 and (i % ylen) >= tme_stmp[0] + 1:
-                k = (i % ylen) - tme_stmp[0] - 1
-                xdif = x[k + 1] - x[k]
-                xp = [x[k] - 1 / 2 * xdif, x[k] + 1 / 2 * xdif, x[k] + 1 / 2 * xdif, x[k] - 1 / 2 * xdif]
+                    col_ind = (opts['discr_nmb'] // 2)
+                k = (i % ylen) - tme_stmp[0]
+                xdif = x[k] - x[k-1]
+                xp = [x[k-1] - 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] - 1 / 2 * xdif]
                 yp = [neg_cont, neg_cont, pos_cont, pos_cont]
                 plt.fill(xp, yp, color=colors[col_ind], edgecolor=colors[col_ind], alpha=1)
-            elif i % ylen == 0 and i != 0:
+            elif i % ylen == 0:
                 j += 1
                 plt.subplot(3 + num_periods, 1, j + 1)
-    
+
     plt.subplot(3 + num_periods, 1, 1)
 
     opts['export']['export_name'] = export_name + "_y"
@@ -421,11 +423,12 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
         fig_2.tight_layout()
 
     if opts['plot_cor']:
-        y_ltstr, fig_3, axs_2 = plot_cor_mat(y_ltstr, num_periods, opts)
+        y_ltstr, fig_3, axs_3 = plot_cor_mat(y_ltstr, num_periods, opts)
         fig_3.tight_layout()
 
     if opts['plot_cor_length']:
-        plot_cor_length(y_ltstr, num_periods, opts)
+        fig_4, axs_4 = plot_cor_length(y_ltstr, num_periods, opts)
+        fig_4.tight_layout()
         if opts['export']['export'] and 'format' in opts['export'] and opts['export']['format'] == "FIG":
             cur_fig = plt.gcf()
             cur_fig.set_size_inches(16, 9)
@@ -560,26 +563,25 @@ def plot_cor_length(y_ltstr, num_periods, opts):
     for i in range(maxdim):
         cur_sign_el = sign_cor_mat[i, i]
         if abs(cur_sign_el) > 0:
-            vert1 = 1
-            vert2 = 1
-            dec_b = i % length_data
+            vert1 = 0
+            vert2 = 0
+            dec_b = (i+1) % length_data
 
             if dec_b == 0:
                 var_r = 0
                 var_l = length_data
-            elif dec_b < length_data / 2 or dec_b > length_data / 2:
+            elif (dec_b < length_data / 2) or (dec_b > length_data / 2):
                 var_r = length_data - dec_b
                 var_l = dec_b
             else:
                 var_r = length_data // 2
                 var_l = length_data // 2
-
-            for j in range(1, var_r):
+            for j in range(0, var_r-1):
                 if cur_sign_el == sign_cor_mat[i, i + j]:
                     vert1 += 1
                 else:
                     break
-            for j in range(1, var_l):
+            for j in range(0, var_l-1):
                 if cur_sign_el == sign_cor_mat[i, i - j]:
                     vert2 += 1
                 else:
@@ -594,9 +596,8 @@ def plot_cor_length(y_ltstr, num_periods, opts):
     vert_r = vert_r.astype(int)
     for i in range(len(y_ltstr.cor_mat)):
         col_ind = np.full(length_data, np.nan)
-        k = 2
-        if vert_l[i] >= 1 or vert_r[i] >= 1:
-            print(vert_l[i])
+        k = 1
+        if (vert_l[i] >= 0) or (vert_r[i] >= 0):
             for j in range(vert_l[i] - 1, 0, -1):
                 col_ind[k] = min(int(np.ceil(y_ltstr.cor_mat[i, i - j] * nmb_colors)), nmb_colors)
                 k += 1
@@ -615,26 +616,28 @@ def plot_cor_length(y_ltstr, num_periods, opts):
             insert = out[i]
             ysize[i] = len(insert)
             plot_mat[i, :len(insert)] = insert
-
     plot_mat = np.flipud(plot_mat.T)
-
     colors = color_lut(1)
     colors = colors[128:256, :]
     colors = colors[np.round(np.linspace(0, 127, nmb_colors)).astype(int), :]
     colors = np.vstack(([1, 1, 1], colors))
 
-    plt.figure()
+    # Create a custom colormap
+    cmap = mcolors.ListedColormap(colors)
+
+    plt.figure(figsize=(12, 8))
+    plt.get_current_fig_manager().resize(1710, 1112)
     if not opts['export']['export']:
         plt.suptitle('Correlation Length')
     for i in range(sb_plot_nmb):
         plt.subplot(sb_plot_nmb, 1, i + 1)
         max_i = max(ysize[opts['stamp_indices'][(i * opts['stmp_length']):((i + 1) * opts['stmp_length'])]])
+        max_i = max_i.astype(int)
         image2plot = plot_mat[-max_i:, opts['stamp_indices'][(i * opts['stmp_length']):((i + 1) * opts['stmp_length'])]]
-        plt.imshow(image2plot, cmap=colors)
-        plt.hold(True)
+        plt.imshow(image2plot, cmap=cmap, aspect='auto')
         vert_ls = np.repeat(vert_l[opts['stamp_indices'][(i * opts['stmp_length']):((i + 1) * opts['stmp_length'])]], 2)
         xs = np.repeat(np.linspace(1, opts['stmp_length'] + 1, opts['stmp_length'] + 1), 2)
-        xs = xs[:-1]
+        xs = xs[1:-1]
         plt.plot(xs - 0.5, max_i + 1 - vert_ls, linewidth=2, color='black', linestyle='-')
         if 'format' in opts['export'] and opts['export']['format'] == "FIG":
             if i == 0:
@@ -655,6 +658,11 @@ def plot_cor_length(y_ltstr, num_periods, opts):
             plt.subplot(sb_plot_nmb, 1, i + 1)
             opts['export']['export_name'] = f"{export_name}_cor_length_{i + 1}"
             export_sub_plot(opts)
+
+    fig = plt.gcf()
+    axs = plt.gca()
+
+    return fig, axs
 
 def export_sub_plot(opts):
     """
