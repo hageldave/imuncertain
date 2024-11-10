@@ -565,7 +565,7 @@ def plot_cor_length(y_ltstr, num_periods, opts):
         if abs(cur_sign_el) > 0:
             vert1 = 0
             vert2 = 0
-            dec_b = (i+1) % length_data
+            dec_b = (i + 1) % length_data
 
             if dec_b == 0:
                 var_r = 0
@@ -636,9 +636,9 @@ def plot_cor_length(y_ltstr, num_periods, opts):
         image2plot = plot_mat[-max_i:, opts['stamp_indices'][(i * opts['stmp_length']):((i + 1) * opts['stmp_length'])]]
         plt.imshow(image2plot, cmap=cmap, aspect='auto')
         vert_ls = np.repeat(vert_l[opts['stamp_indices'][(i * opts['stmp_length']):((i + 1) * opts['stmp_length'])]], 2)
-        xs = np.repeat(np.linspace(1, opts['stmp_length'] + 1, opts['stmp_length'] + 1), 2)
+        xs = np.repeat(np.linspace(0, opts['stmp_length'], opts['stmp_length'] + 1), 2)
         xs = xs[1:-1]
-        plt.plot(xs - 0.5, max_i + 1 - vert_ls, linewidth=2, color='black', linestyle='-')
+        plt.plot(xs - 0.5, max_i - vert_ls, linewidth=2, color='black', linestyle='-')
         if 'format' in opts['export'] and opts['export']['format'] == "FIG":
             if i == 0:
                 plt.title("input data")
