@@ -113,8 +113,8 @@ def plot_dist(data, plot_type, **opts):
     if opts['export']['export']:
         opts['axbounds'] = plt.axis()
         export_subplot(opts)
-    if axbounds[2] != axbounds[3]:
-        plt.axis(axbounds)
+    # if axbounds[2] != axbounds[3]:
+    #     plt.axis(axbounds)
 
 def export_subplot(opts):
     """

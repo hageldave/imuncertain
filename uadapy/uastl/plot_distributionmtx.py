@@ -262,7 +262,7 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
     maxyheight.append((R['lims'][3] - R['lims'][2]) / (part_factor + 1) / 2)
     ymid.append(R['lims'][2] + maxyheight[-1])
 
-    x = np.linspace(0, ylen - 1, ylen)
+    x = np.linspace(0, ylen, ylen + 1)
 
     # Approx. 16:9 pbaspect of plot:
     pbx_length = (3 + num_periods + 1) / 9 * 16
@@ -275,8 +275,8 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
     plt.subplot(3 + num_periods, 1, 1)
     if helper_co_dep == 1:
         j = 0
-        for i in range(1, len(plot_back)):
-            if i == opts['co_point'] and (i % ylen) > tme_stmp[0] and (i % ylen) < tme_stmp[1]:
+        for i in range(1, len(plot_back) + 1):
+            if i - 1 == opts['co_point'] and (i % ylen) > tme_stmp[0] and (i % ylen) < tme_stmp[1]:
                 k = (i % ylen) - tme_stmp[0]
                 thickness = (tme_stmp[1] - tme_stmp[0]) / 500
                 xdif = x[k] - x[k -1]
@@ -291,18 +291,18 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
                 yp = [yss - diff, yss - diff, yss + diff + part_factor * diff * 2, yss + diff + part_factor * diff * 2]
                 plt.fill(xp, yp, color=[0, 0, 0], edgecolor='none', alpha=1)
 
-            if (i % ylen) != 0 and (i % ylen) > tme_stmp[0] and (i % ylen) < tme_stmp[1]:
+            if (i % ylen) != 0 and (i % ylen) > tme_stmp[0] and (i % ylen) <= tme_stmp[1]:
                 maxc = max(abs(plot_back[(j) * ylen: (j + 1) * ylen]))
                 if maxc > 0:
                     yss = ymid[j]
                     diff = maxyheight[j]
-                    if plot_back[i] > 0:
+                    if plot_back[i-1] > 0:
                         neg_cont = yss
-                        pos_cont = yss + plot_back[i] / maxc * diff
+                        pos_cont = yss + plot_back[i-1] / maxc * diff
                     else:
-                        neg_cont = yss + plot_back[i] / maxc * diff
+                        neg_cont = yss + plot_back[i-1] / maxc * diff
                         pos_cont = yss
-                    col_ind = int(np.ceil(plot_back[i] / maxc * (opts['discr_nmb'] // 2))) + (opts['discr_nmb'] // 2)
+                    col_ind = int(np.ceil(plot_back[i-1] / maxc * (opts['discr_nmb'] // 2))) + (opts['discr_nmb'] // 2)
                 else:
                     yss = ymid[j]
                     neg_cont = yss
@@ -313,7 +313,30 @@ def plot_distributionmtx(y_ltstr : uncertain_data, num_periods, plot_type, **opt
                 xp = [x[k-1] - 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] - 1 / 2 * xdif]
                 yp = [neg_cont, neg_cont, pos_cont, pos_cont]
                 plt.fill(xp, yp, color=colors[col_ind], edgecolor=colors[col_ind], alpha=1)
-            elif i % ylen == 0:
+            elif i % ylen == 0 and ylen == tme_stmp[1]:
+                maxc = max(abs(plot_back[(j) * ylen: (j + 1) * ylen]))
+                if maxc > 0:
+                    yss = ymid[j]
+                    diff = maxyheight[j]
+                    if plot_back[i-1] > 0:
+                        neg_cont = yss
+                        pos_cont = yss + plot_back[i-1] / maxc * diff
+                    else:
+                        neg_cont = yss + plot_back[i-1] / maxc * diff
+                        pos_cont = yss
+                    col_ind = int(np.ceil(plot_back[i-1] / maxc * (opts['discr_nmb'] // 2))) + (opts['discr_nmb'] // 2)
+                else:
+                    yss = ymid[j]
+                    neg_cont = yss
+                    pos_cont = yss
+                    col_ind = (opts['discr_nmb'] // 2)
+                k = tme_stmp[1] - tme_stmp[0]
+                xdif = x[k] - x[k-1]
+                xp = [x[k-1] - 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] + 1 / 2 * xdif, x[k-1] - 1 / 2 * xdif]
+                yp = [neg_cont, neg_cont, pos_cont, pos_cont]
+                plt.fill(xp, yp, color=colors[col_ind], edgecolor=colors[col_ind], alpha=1)
+
+            if i % ylen == 0 and i < len(plot_back):
                 j += 1
                 plt.subplot(3 + num_periods, 1, j + 1)
 
